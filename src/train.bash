@@ -1,0 +1,1 @@
+python3 train.py --source_path /home/ali/Development/3dgs-mcmc/data/nerf_synthetic/hotdog
