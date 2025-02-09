@@ -82,15 +82,16 @@ fi
 
 
 
-if [ "${EXPERIMENT_TO_PULL}" == "pong" ] || [ "${EXPERIMENT_TO_PULL}" == "all" ]; then
+# if [ "${EXPERIMENT_TO_PULL}" == "pong" ] || [ "${EXPERIMENT_TO_PULL}" == "all" ]; then
 
-	####################################################################################################################################################################################################
-	## Mapillary
-	####################################################################################################################################################################################################
-	rsync -avp --progress ${PULL_EXCLUDE_ARGS} ${WORKSTATON_ADDRESS}:${DEVELOPMENT_ROOT}/particle_nvs_slam/experiments/pong/mdpf/saves ../experiments/pong/mdpf/ &
+# 	####################################################################################################################################################################################################
+# 	## Mapillary
+# 	####################################################################################################################################################################################################
+# 	rsync -avp --progress ${PULL_EXCLUDE_ARGS} ${WORKSTATON_ADDRESS}:${DEVELOPMENT_ROOT}/particle_nvs_slam/experiments/pong/mdpf/saves ../experiments/pong/mdpf/ &
 
-fi
+# fi
 
+rsync -avp --progress ${PULL_EXCLUDE_ARGS} ${WORKSTATON_ADDRESS}:${DEVELOPMENT_ROOT}/gaussian_splatting/outputs ../ &
 
 
 

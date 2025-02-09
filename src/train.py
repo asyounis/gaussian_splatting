@@ -29,6 +29,10 @@ except ImportError:
 
 from compute_scene_metrics import scene_metrics
 
+
+import numpy as np
+
+
 def score_func(view, gaussians, pipeline, background, scores):
 
     img_scores = torch.zeros_like(scores)
@@ -80,6 +84,7 @@ def prune(scene, gaussians, pipe, background, prune_ratio):
     }
 
 def training(dataset, opt, pipe, testing_iterations, visualize_iterations, saving_iterations, checkpoint_iterations, checkpoint, debug_from):
+
     first_iter = 0
     tb_writer = prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
@@ -104,6 +109,47 @@ def training(dataset, opt, pipe, testing_iterations, visualize_iterations, savin
     ema_loss_for_log = 0.0
     progress_bar = tqdm(range(first_iter, opt.iterations), desc="Training progress")
     first_iter += 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    viewpoint_stack = scene.getTrainCameras().copy()
+    xyz = []
+
+    for viewpoint_cam in viewpoint_stack:
+        xyz.append(viewpoint_cam.T)
+
+
+    xyz = np.asarray(xyz)
+
+
+    print(xyz.shape)
+
+    print(np.min(xyz, axis=0))
+    print(np.max(xyz, axis=0))
+
+    print(np.max(xyz, axis=0) - np.min(xyz, axis=0))
+
+
+    exit()
+
+    viewpoint_stack = None
+
+
+
+
+
+
     for iteration in range(first_iter, opt.iterations + 1):
         if network_gui.conn == None:
             network_gui.try_connect()

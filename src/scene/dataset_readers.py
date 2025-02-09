@@ -23,6 +23,9 @@ from plyfile import PlyData, PlyElement
 from utils.sh_utils import SH2RGB
 from scene.gaussian_model import BasicPointCloud
 
+from tqdm import tqdm
+
+
 class CameraInfo(NamedTuple):
     uid: int
     R: np.array
@@ -254,7 +257,125 @@ def readNerfSyntheticInfo(path, white_background, eval, extension=".png"):
                            ply_path=ply_path)
     return scene_info
 
+
+
+def readReplicaInfo(path, white_background, eval, extension=".png"):
+
+    ##############################################################################
+    ## Read the trajectory!
+    ##############################################################################
+    with open(os.path.join(path, "traj.txt")) as traj_file:
+        lines = traj_file.readlines()
+
+        trajectory = []
+        for line in lines:
+            split_line = line.rstrip().split(" ")
+
+            values = [float(vs) for vs in split_line]
+            values = np.asarray(values)
+            values = np.reshape(values, (4, 4))
+            trajectory.append(values)
+
+    ##############################################################################
+    ## Read the Camera params File!
+    ##############################################################################
+    with open(os.path.join(path, "../cam_params.json")) as json_file:
+        contents = json.load(json_file)
+        camera_params = contents["camera"]
+        w = camera_params["w"]
+        h = camera_params["h"]
+        fovx = camera_params["fx"]
+        fovy = camera_params["fy"]
+        cx = camera_params["cx"]
+        cy = camera_params["cy"]
+        scale = camera_params["scale"]
+
+    ##############################################################################
+    ## Create the Cameras
+    ##############################################################################
+    train_cam_infos = []
+    for i, traj in enumerate(tqdm(trajectory, leave=False, desc="Loading Images")):
+
+        # # NeRF 'transform_matrix' is a camera-to-world transform
+        # c2w = traj
+        # # change from OpenGL/Blender camera axes (Y up, Z back) to COLMAP (Y down, Z forward)
+        # # c2w[:3, 1:3] *= -1
+
+        # # get the world-to-camera transform and set R, T
+        # w2c = np.linalg.inv(c2w)
+
+
+        w2c = traj
+        R = np.transpose(w2c[:3,:3])  # R is stored transposed due to 'glm' in CUDA code
+        T = w2c[:3, 3]
+
+        # Load the image 
+        image_path = os.path.join(path, "results/frame{:06d}.jpg".format(i))
+        image_name = Path("results/frame{:06d}.jpg".format(i)).stem
+        image = Image.open(image_path)
+        im_data = np.array(image.convert("RGBA"))
+
+
+        bg = np.array([1,1,1]) if white_background else np.array([0, 0, 0])
+
+        norm_data = im_data / 255.0
+        arr = norm_data[:,:,:3] * norm_data[:, :, 3:4] + bg * (1 - norm_data[:, :, 3:4])
+        image = Image.fromarray(np.array(arr*255.0, dtype=np.byte), "RGB")
+
+        fovy = focal2fov(fov2focal(fovx, image.size[0]), image.size[1])
+        FovY = fovy 
+        FovX = fovx
+
+        train_cam_infos.append(CameraInfo(uid=i, R=R, T=T, FovY=FovY, FovX=FovX, image=image,
+                        image_path=image_path, image_name=image_name, width=image.size[0], height=image.size[1]))
+
+    # No test cam 
+    test_cam_infos = []
+
+    nerf_normalization = getNerfppNorm(train_cam_infos)
+
+    ##############################################################################
+    ## Make Point Clouds
+    ##############################################################################
+
+    mesh_name = "../{}_mesh.ply".format(os.path.basename(path))
+    ply_path = os.path.join(path, mesh_name)
+    if not os.path.exists(ply_path):
+        # Since this data set has no colmap data, we start with random points
+        num_pts = 100_000
+        print(f"Generating random point cloud ({num_pts})...")
+        
+        # We create random points inside the bounds of the synthetic Blender scenes
+        xyz = np.random.random((num_pts, 3)) * 2.6 - 1.3
+        shs = np.random.random((num_pts, 3)) / 255.0
+        pcd = BasicPointCloud(points=xyz, colors=SH2RGB(shs), normals=np.zeros((num_pts, 3)))
+
+        storePly(ply_path, xyz, SH2RGB(shs) * 255)
+        assert(False)
+    try:
+        pcd = fetchPly(ply_path)
+    except:
+        pcd = None
+
+
+
+
+
+    ##############################################################################
+    ## Create the scene
+    ##############################################################################
+    scene_info = SceneInfo(point_cloud=pcd,
+                           train_cameras=train_cam_infos,
+                           test_cameras=test_cam_infos,
+                           nerf_normalization=nerf_normalization,
+                           ply_path=ply_path)
+    return scene_info
+
+
+
+
 sceneLoadTypeCallbacks = {
     "Colmap": readColmapSceneInfo,
-    "Blender" : readNerfSyntheticInfo
+    "Blender" : readNerfSyntheticInfo,
+    "Replica" : readReplicaInfo
 }
