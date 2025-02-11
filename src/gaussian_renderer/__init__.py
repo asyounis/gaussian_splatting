@@ -15,6 +15,8 @@ from diff_gaussian_rasterization import GaussianRasterizationSettings, GaussianR
 from scene.gaussian_model import GaussianModel
 from utils.sh_utils import eval_sh
 
+import matplotlib.pyplot as plt
+
 def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, scores = None, scaling_modifier = 1.0, override_color = None):
     """
     Render the scene. 
@@ -47,6 +49,13 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         prefiltered=False,
         debug=pipe.debug
     )
+
+
+    print(viewpoint_camera.world_view_transform)
+    print(viewpoint_camera.full_proj_transform)
+    print(viewpoint_camera.camera_center)
+
+
 
     rasterizer = GaussianRasterizer(raster_settings=raster_settings)
 
@@ -85,6 +94,7 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     else:
         colors_precomp = override_color
 
+
     # Rasterize visible Gaussians to image, obtain their radii (on screen). 
     rendered_image, radii, kernel_times = rasterizer(
         means3D = means3D,
@@ -96,6 +106,36 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         scales = scales,
         rotations = rotations,
         cov3D_precomp = cov3D_precomp)
+
+
+
+
+    save=dict()
+    save["means3D"] = means3D
+    save["means2D"] = means2D
+    save["shs"] = shs
+    save["opacity"] = opacity
+    save["scores"] = scores
+    save["scales"] = scales
+    save["rotations"] = rotations
+    torch.save(save, "/home/ali/Desktop/trash/replica/save.pt")
+
+
+    print(means3D.dtype)
+    print(means2D.dtype)
+    print(shs.dtype)
+    print(opacity.dtype)
+    print(scores.dtype)
+    print(scales.dtype)
+    print(rotations.dtype)
+
+    rendered_image = torch.permute(rendered_image, [1, 2, 0]).contiguous().detach().cpu()
+    rendered_image = rendered_image.numpy()
+
+    plt.imshow(rendered_image)
+    plt.show()
+
+    exit()
 
     # Those Gaussians that were frustum culled or had a radius of 0 were not visible.
     # They will be excluded from value updates used in the splitting criteria.

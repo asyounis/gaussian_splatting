@@ -1,1 +1,0 @@
-Namespace(sh_degree=3, source_path='/home/ali/Development/gaussian_splatting/data/nerf_synthetic/hotdog', model_path='../outputs/nerf_synthetic/hotdog/', images='images', resolution=-1, white_background=False, data_device='cuda', eval=False)
