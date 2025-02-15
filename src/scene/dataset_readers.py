@@ -381,5 +381,5 @@ def readReplicaInfo(path, white_background, eval, extension=".png"):
 sceneLoadTypeCallbacks = {
     "Colmap": readColmapSceneInfo,
     "Blender" : readNerfSyntheticInfo,
-    "Replica" : readReplicaInfo
+    "Replica" : readColmapSceneInfo
 }

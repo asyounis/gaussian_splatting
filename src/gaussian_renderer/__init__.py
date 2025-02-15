@@ -31,6 +31,8 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
     except:
         pass
 
+
+
     # Set up rasterization configuration
     tanfovx = math.tan(viewpoint_camera.FoVx * 0.5)
     tanfovy = math.tan(viewpoint_camera.FoVy * 0.5)
@@ -50,10 +52,6 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         debug=pipe.debug
     )
 
-
-    print(viewpoint_camera.world_view_transform)
-    print(viewpoint_camera.full_proj_transform)
-    print(viewpoint_camera.camera_center)
 
 
 
@@ -106,6 +104,27 @@ def render(viewpoint_camera, pc : GaussianModel, pipe, bg_color : torch.Tensor, 
         scales = scales,
         rotations = rotations,
         cov3D_precomp = cov3D_precomp)
+
+
+
+
+
+    print("viewpoint_camera.FoVx", viewpoint_camera.FoVx)
+    print("viewpoint_camera.FoVy", viewpoint_camera.FoVy)
+    print("viewpoint_camera.world_view_transform", viewpoint_camera.world_view_transform.dtype)
+    print("viewpoint_camera.full_proj_transform", viewpoint_camera.full_proj_transform.dtype)
+    print("viewpoint_camera.camera_center", viewpoint_camera.camera_center.dtype)
+
+    print("")
+    print("means3D", means3D.dtype)
+    print("means2D", means2D.dtype)
+    print("opacity", opacity.dtype)
+    print("shs", shs.dtype)
+    print("scores", scores.dtype)
+    print("scales", scales.dtype)
+    print("rotations", rotations.dtype)
+    exit()
+
 
 
 

@@ -120,36 +120,6 @@ def training(dataset, opt, pipe, testing_iterations, visualize_iterations, savin
 
 
 
-
-
-
-    viewpoint_stack = scene.getTrainCameras().copy()
-    xyz = []
-
-    for viewpoint_cam in viewpoint_stack:
-        xyz.append(viewpoint_cam.T)
-
-
-    xyz = np.asarray(xyz)
-
-
-    print(xyz.shape)
-
-    print(np.min(xyz, axis=0))
-    print(np.max(xyz, axis=0))
-
-    print(np.max(xyz, axis=0) - np.min(xyz, axis=0))
-
-
-    exit()
-
-    viewpoint_stack = None
-
-
-
-
-
-
     for iteration in range(first_iter, opt.iterations + 1):
         if network_gui.conn == None:
             network_gui.try_connect()
